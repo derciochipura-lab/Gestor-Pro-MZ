@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-MZ">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestor Pro MZ</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+        .box { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input { padding: 8px; margin-right: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 8px 15px; background: #004a80; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background: #eee; }
+        .alerta { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Gestor Pro MZ - Sistema de Stock</h1>
+    
+    <div class="box">
+        <h3>Registar Novo Artigo</h3>
+        <input type="text" id="nome" placeholder="Nome do Produto">
+        <input type="number" id="venda" placeholder="Preço Venda (MT)">
+        <input type="number" id="stock" placeholder="Quantidade">
+        <button onclick="salvar()">Gravar Produto</button>
+    </div>
+
+    <table id="tabela">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Preço</th>
+                <th>Stock</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        const API = "/api/produtos";
+
+        async function listar() {
+            const res = await fetch(API);
+            const dados = await res.json();
+            const body = document.querySelector("#tabela tbody");
+            body.innerHTML = "";
+            dados.forEach(p => {
+                const baixo = p.stockActual <= 5;
+                body.innerHTML += `
+                    <tr>
+                        <td>${p.nome}</td>
+                        <td>${p.precoVenda} MT</td>
+                        <td>${p.stockActual}</td>
+                        <td class="${baixo ? 'alerta' : ''}">${baixo ? 'REPOR STOCK' : 'OK'}</td>
+                    </tr>`;
+            });
+        }
+
+        async function salvar() {
+            const p = {
+                nome: document.getElementById('nome').value,
+                precoVenda: document.getElementById('venda').value,
+                stockActual: document.getElementById('stock').value,
+                precoCusto: 0 // Simplificado para teste
+            };
+            await fetch(API, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(p)
+            });
+            listar();
+        }
+
+        listar(); // Carrega a lista ao abrir
+    </script>
+</body>
+</html>
